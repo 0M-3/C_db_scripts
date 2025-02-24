@@ -16,13 +16,16 @@ typedef struct {
 
 #define size_of_attribute(Struct, Attribute) sizeof(((Struct*)0)-> Attribute)
 
-const uint32_t ID_SIZE = size_of_attribute(Row, id);
-const uint32_t USERNAME_SIZE= size_of_attribute(Row, username);
-const uint32_t EMAIL_SIZE = size_of_attribute(Row, email);
+/*
+const uint32_t ID_SIZE = sizeof(((Row*)0)->id);
+const uint32_t USERNAME_SIZE= sizeof(((Row*)0)->username);
+const uint32_t EMAIL_SIZE = sizeof(((Row*)0)->email);
 const uint32_t ID_OFFSET = 0;
-const uint32_t USERNAME_OFFSET = ID_OFFSET+ID_SIZE;
-const uint32_t EMAIL_OFFSET = USERNAME_OFFSET+USERNAME_SIZE;
+const uint32_t USERNAME_OFFSET = ID_OFFSET + ID_SIZE;
+const uint32_t EMAIL_OFFSET = USERNAME_OFFSET + USERNAME_SIZE;
 const uint32_t ROW_SIZE = ID_SIZE + USERNAME_SIZE + EMAIL_SIZE;
+
+
 
 void serialize_row(Row* source, void* destination) {
     memcpy(destination + ID_OFFSET, &(source->id), ID_SIZE);
@@ -40,6 +43,34 @@ const uint32_t PAGE_SIZE = 4096;
 #define TABLE_MAX_PAGES 100
 const uint32_t ROWS_PER_PAGE = PAGE_SIZE / ROW_SIZE;
 const uint32_t TABLE_MAX_ROWS  = ROWS_PER_PAGE * TABLE_MAX_PAGES;
+*/
+
+enum {
+    ID_SIZE = sizeof(((Row*)0)->id),
+    USERNAME_SIZE = sizeof(((Row*)0)->username),
+    EMAIL_SIZE = sizeof(((Row*)0)->email),
+    ID_OFFSET = 0,
+    USERNAME_OFFSET = ID_OFFSET + ID_SIZE,
+    EMAIL_OFFSET = USERNAME_OFFSET + USERNAME_SIZE,
+    ROW_SIZE = ID_SIZE + USERNAME_SIZE + EMAIL_SIZE,
+    PAGE_SIZE = 4096,
+    TABLE_MAX_PAGES = 100,
+    ROWS_PER_PAGE = PAGE_SIZE / ROW_SIZE,
+    TABLE_MAX_ROWS = ROWS_PER_PAGE * TABLE_MAX_PAGES
+};
+
+void serialize_row(Row* source, void* destination) {
+    memcpy(destination + ID_OFFSET, &(source->id), ID_SIZE);
+    memcpy(destination + USERNAME_OFFSET, &(source->username), USERNAME_SIZE);
+    memcpy(destination + EMAIL_OFFSET, &(source->email), EMAIL_SIZE);
+}
+
+void deserialize_row(void* source, Row* destination) {
+    memcpy(&(destination->id), source + ID_OFFSET, ID_SIZE);
+    memcpy(&(destination->username), source + USERNAME_OFFSET, USERNAME_SIZE); 
+    memcpy(&(destination->email), source + EMAIL_OFFSET, EMAIL_SIZE);
+}
+
 
 typedef struct {
     uint32_t num_rows;
@@ -176,7 +207,7 @@ ExecuteResult execute_select (Statement* statement, Table* table) {
 }
 
 ExecuteResult execute_statement (Statement* statement, Table* table) {
-    switch(Statement->) {
+    switch(statement->type) {
         case(STATEMENT_INSERT):
             return execute_insert(statement, table);
         case(STATEMENT_SELECT):
@@ -238,7 +269,7 @@ int main(int argc, char* argv[]) {
                     continue;
             }
 
-            execute_statement(&statement);
+            //execute_statement(&statement);
             switch (execute_statement(&statement, table))
             {
             case (EXECUTE_SUCCESS):
