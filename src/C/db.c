@@ -1,8 +1,11 @@
+#define _POSIX_C_SOURCE 200809L
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <sys/types.h>
 
 // This section is the temporary code for storing an in-memory row based database
 #define COLUMN_USERNAME_SIZE 12
@@ -108,7 +111,7 @@ void free_table(Table* table) {
 
 // Permanent code below
 
-typedef enum { EXECUTE_SUCCESS, EXECUTE_TABLE_FULL } ExecuteResult;
+typedef enum { EXECUTE_SUCCESS, EXECUTE_TABLE_FULL, EXECUTE_FAILURE } ExecuteResult;
 
 typedef struct
 {
@@ -124,7 +127,7 @@ typedef enum {
 
 typedef enum { PREPARE_SUCCESS, PREPARE_UNRECOGNISED_STATEMENT, PREPARE_SYNTAX_ERROR} PrepareResult;
 
-typedef enum { STATEMENT_INSERT, STATEMENT_SELECT } StatementType;
+typedef enum { STATEMENT_INSERT, STATEMENT_SELECT, STATEMENT_FAILED } StatementType;
 
 typedef struct { 
     StatementType type; 
@@ -135,9 +138,9 @@ PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement)
     if (strncmp(input_buffer->buffer, "insert", 6)==0) {
         statement->type = STATEMENT_INSERT;
         // Insert function being scanned
-        int args_assigned = sscanf(
-            input_buffer->buffer, "insert %d %s %s", &(statement->row_to_insert.id),
-            statement->row_to_insert.username, statement->row_to_insert.email);
+        //int args_assigned = sscanf(
+        //    input_buffer->buffer, "insert %d %s %s", &(statement->row_to_insert.id),
+        //    statement->row_to_insert.username, statement->row_to_insert.email);
         return PREPARE_SUCCESS;
     }
     if (strcmp(input_buffer->buffer, "select")==0) {
@@ -212,6 +215,8 @@ ExecuteResult execute_statement (Statement* statement, Table* table) {
             return execute_insert(statement, table);
         case(STATEMENT_SELECT):
             return execute_select(statement, table);
+        default:
+            return EXECUTE_FAILURE; 
             
     }
 }
@@ -277,6 +282,9 @@ int main(int argc, char* argv[]) {
                 break;
             case (EXECUTE_TABLE_FULL):
                 printf("Error: Table full. \n");
+                break;
+            case (EXECUTE_FAILURE):
+                printf("Error: Statement failed to generate result. \n");
                 break;
             }
         
