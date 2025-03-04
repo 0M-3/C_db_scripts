@@ -5,7 +5,7 @@
 void test_command_read() {
     FILE *fp;
     char buffer[128];
-    const char *command = "ls -l";
+    const char *command = "dir";
 
 
     fp = popen(command, "r");
@@ -21,20 +21,20 @@ void test_command_read() {
     pclose(fp);
 }
 
-char* run_command(const char* command) {
-    char buffer[128];
-    FILE *fp;
+// char* run_command(const char* command) {
+//     char buffer[128];
+//     FILE *fp;
 
-    fp = popen(command, "r");
-    if (fp==NULL) {
-        perror("popen failed. \n");
-        exit(EXIT_FAILURE);
-    }
+//     fp = popen(command, "r");
+//     if (fp==NULL) {
+//         perror("popen failed. \n");
+//         exit(EXIT_FAILURE);
+//     }
 
-    while (fgets(buffer, sizeof(buffer), fp)!= NULL) {
+//     while (fgets(buffer, sizeof(buffer), fp)!= NULL) {
         
-    }
-}
+//     }
+// }
 
 int main(){
     test_command_read();
