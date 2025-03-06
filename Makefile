@@ -2,12 +2,12 @@ CC= gcc
 CFLAGS = -Wall -Werror -g
 
 #Paths
-SRC_DIR = src/c
+SRC_DIR = src/C
 BUILD_DIR = build
 TEST_DIR = test
 
 #Executables to be generated with the makefile
-EXECTUABLE = db 
+EXECUTABLE = db
 TEST_FILES1 = test
 TEST_FILES2 = test2
 
@@ -19,7 +19,7 @@ SRC_TEST_FILES2 = $(TEST_DIR)/test2.c
 # Object files (in BUILD_DIR)
 
 #Default target
-all: $(BUILD_DIR)/$(EXECTUABLES)  $(BUILD_DIR)/$(TEST_FILES1) #$(BUILD_DIR)/$(TEST_FILES2)
+all: $(BUILD_DIR)/$(EXECUTABLE)  $(BUILD_DIR)/$(TEST_FILES1) #$(BUILD_DIR)/$(TEST_FILES2)
 
 # Rule to create the build directory if it doesn't exist
 $(BUILD_DIR):
@@ -34,8 +34,8 @@ $(BUILD_DIR)/$(TEST_FILES1): $(SRC_TEST_FILES1) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -o $@ $^	
 
 # Rule to create test2
-$(BUILD_DIR)/$(TEST_FILES1): $(SRC_TEST_FILES2) | $(BUILD_DIR)
-	$(CC) $(CFLAGS) -o $@ $^	
+# $(BUILD_DIR)/$(TEST_FILES1): $(SRC_TEST_FILES2) | $(BUILD_DIR)
+# 	$(CC) $(CFLAGS) -o $@ $^	
 
 # Clean rule
 clean:
