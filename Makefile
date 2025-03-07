@@ -34,8 +34,8 @@ $(BUILD_DIR)/$(TEST_FILES1): $(SRC_TEST_FILES1) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) -o $@ $^	
 
 # Rule to create test2
-# $(BUILD_DIR)/$(TEST_FILES1): $(SRC_TEST_FILES2) | $(BUILD_DIR)
-# 	$(CC) $(CFLAGS) -o $@ $^	
+$(BUILD_DIR)/$(TEST_FILES1): $(SRC_TEST_FILES2) | $(BUILD_DIR)
+	$(CC) $(CFLAGS) -o $@ $^	
 
 # Clean rule
 clean:
