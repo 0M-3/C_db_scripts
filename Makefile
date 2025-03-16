@@ -19,7 +19,7 @@ SRC_TEST_FILES2 = $(TEST_DIR)/test2.c
 # Object files (in BUILD_DIR)
 
 #Default target
-all: $(BUILD_DIR)/$(EXECUTABLE) $(BUILD_DIR)/$(TEST_FILES2) $(BUILD_DIR)/$(TEST_FILES1)
+all: $(BUILD_DIR)/$(EXECUTABLE) $(BUILD_DIR)/$(TEST_FILES1) $(BUILD_DIR)/$(TEST_FILES2)
 
 
 # Rule to create the build directory if it doesn't exist

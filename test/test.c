@@ -18,7 +18,7 @@ BOOL CreateChildProcess(const char* program) {
 
     // Create a pipe for child's STDOUT (parent reads)
     if (!CreatePipe(&hChildStdoutRd, &hChildStdoutWr, &sa, 0)) {
-        fprintf(stderr, "CreatePipe (stdout) failed (%u)\n", GetLastError());
+        fprintf(stderr, "CreatePipe (stdout) failed (%lu)\n", GetLastError());
         return FALSE;
     }
     
@@ -27,7 +27,7 @@ BOOL CreateChildProcess(const char* program) {
 
     // Create pipe for child's STDIN (parent writes)
     if (!CreatePipe(&hChildStdinRd, &hChildStdinWr, &sa, 0)) {
-        fprintf(stderr, "Create pipe (stdin) failed (%u)\n", GetLastError());
+        fprintf(stderr, "Create pipe (stdin) failed (%lu)\n", GetLastError());
         return FALSE;
     }
 
@@ -42,7 +42,7 @@ BOOL CreateChildProcess(const char* program) {
     si.hStdError = hChildStdoutWr;
 
     // Spawn child processes
-    BOOL success = CreateProcesses(
+    BOOL success = CreateProcess(
         NULL, (LPSTR)program, NULL, NULL, TRUE,
         CREATE_NO_WINDOW, NULL, NULL, &si, &pi
     );
@@ -120,7 +120,12 @@ BOOL TestInsertAndSelect() {
     };
 
     const char* expected[] = {
-        "db > Executed.", "db > (1, user1, person1@example.com)", ".Executed", "db > "
+        "db > 'insert 1 user1 person1@example.com'. ",
+        "Executed. ",
+        "db > 'select'. ",
+        "(1, user1, person1@example.com) ",
+        "Executed. ", 
+        "db > '.exit'. "
     };
 
     // Send commands to child
