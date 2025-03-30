@@ -83,6 +83,35 @@ char* ReadAllOutput() {
 
 }
 
+char* ReadLastOutput() {
+    //First read all output
+    char* allOutput = ReadAllOutput();
+
+    if (allOutput[0] == '\0') {
+        // Empty output
+        return allOutput;
+    }
+
+    //Find the last line
+    char* lastline =allOutput;
+    char* ptr = allOutput;
+
+    while (*ptr) {
+        if (*ptr == '\n') {
+            lastline = ptr + 1;
+        }
+        ptr++;
+    }
+
+    //Create a copy of just the last line
+    char* result = _strdup(lastline);
+
+    //Free the full output buffer
+    free(allOutput);
+
+    return result;
+}
+
 // Splits output into lines (handles \r\n and \n)
 int SplitOutputLines(char* output, char*** lines) {
     int count = 0;
@@ -136,9 +165,6 @@ BOOL TestInsertAndSelect() {
         }
     }
 
-    //Close input pipe to signal EOF
-    CloseHandle(hChildStdinWr);
-
     //Read and parse output
     char* output = ReadAllOutput();
     char** actualLines;
@@ -150,12 +176,31 @@ BOOL TestInsertAndSelect() {
         expected, sizeof(expected)/sizeof(expected[0])
     );
 
+    char repeatCommand[128];
+    char* expectedFinal = "Error: Table full. ";
+    char* repeatOutput = NULL;
+    int i = 1;
+
+    do {
+        sprintf(repeatCommand, "insert %d user%d person%d@example.com", i,i,i);
+        if(!SendCommand(repeatCommand)) {
+            fprintf(stderr, "Failed to send command: %s\n", repeatCommand);
+            break;
+        }
+        i++;
+        repeatOutput = ReadLastOutput();
+    } while (strcmp(repeatOutput, expectedFinal)!=0);
+
+    //Close input pipe to signal EOF
+    CloseHandle(hChildStdinWr);
+
     //Clean up
     free(output);
     for (int i = 0; i < actualCount; i++) {free(actualLines[i]);}
     free(actualLines);
     return success;
 }
+
 
 // void test_command_read() {
 //     FILE *fp;
