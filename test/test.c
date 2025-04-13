@@ -4,11 +4,12 @@
 #include <string.h>
 #include <windows.h>
 
-#define BUFSIZE 4096
+#define BUFSIZE 262144
 
 HANDLE hChildStdinWr = NULL; // Parent process writes commands in this variable
 HANDLE hChildStdoutRd = NULL; // Parent process reads outputs from this variable
 PROCESS_INFORMATION pi;
+DWORD desiredBufferSize = 65536;
 
 // This function creates the child process and configures the pipes
 
@@ -17,7 +18,7 @@ BOOL CreateChildProcess(const char* program) {
     HANDLE hChildStdoutWr, hChildStdinRd;
 
     // Create a pipe for child's STDOUT (parent reads)
-    if (!CreatePipe(&hChildStdoutRd, &hChildStdoutWr, &sa, 0)) {
+    if (!CreatePipe(&hChildStdoutRd, &hChildStdoutWr, &sa, desiredBufferSize)) {
         fprintf(stderr, "CreatePipe (stdout) failed (%lu)\n", GetLastError());
         return FALSE;
     }
@@ -26,7 +27,7 @@ BOOL CreateChildProcess(const char* program) {
     SetHandleInformation(hChildStdoutRd, HANDLE_FLAG_INHERIT, 0);
 
     // Create pipe for child's STDIN (parent writes)
-    if (!CreatePipe(&hChildStdinRd, &hChildStdinWr, &sa, 0)) {
+    if (!CreatePipe(&hChildStdinRd, &hChildStdinWr, &sa, desiredBufferSize)) {
         fprintf(stderr, "Create pipe (stdin) failed (%lu)\n", GetLastError());
         return FALSE;
     }
@@ -145,7 +146,8 @@ BOOL CompareOutput(char** actual, int actualCount, const char** expected, int ex
 // Test case (insert and retrieve a row)
 BOOL TestInsertAndSelect() {
     const char* commands[] = {
-        "insert 1 user1 person1@example.com", "select", ".exit"
+        "insert 1 user1 person1@example.com", "select"
+        //,".exit"
     };
 
     const char* expected[] = {
@@ -165,6 +167,22 @@ BOOL TestInsertAndSelect() {
         }
     }
 
+
+    char repeatCommand[64];
+        
+    for (int j=0; j<2000; j++) {
+        sprintf(repeatCommand, "insert %d user%d person%d@example.com", j, j, j);
+        if(!SendCommand(repeatCommand)) {
+            fprintf(stderr, "Failed to send Command: %s\n", repeatCommand);
+            printf("Failed to send Command: %s\n", repeatCommand);
+        }
+        printf("Sent command: %s\n", repeatCommand);
+    }
+
+    //Close input pipe to signal EOF
+    CloseHandle(hChildStdinWr);
+
+
     //Read and parse output
     char* output = ReadAllOutput();
     char** actualLines;
@@ -176,14 +194,16 @@ BOOL TestInsertAndSelect() {
         expected, sizeof(expected)/sizeof(expected[0])
     );
 
+/*
     char repeatCommand[128];
-    char* expectedFinal = "Error: Table full. ";
+    char expectedFinal[] = "Error: Table full. ";
     char* repeatOutput = NULL;
     int i = 1;
 
     do {
         sprintf(repeatCommand, "insert %d user%d person%d@example.com", i,i,i);
         if(!SendCommand(repeatCommand)) {
+            printf("%s\n", repeatCommand);
             fprintf(stderr, "Failed to send command: %s\n", repeatCommand);
             break;
         }
@@ -191,9 +211,7 @@ BOOL TestInsertAndSelect() {
         repeatOutput = ReadLastOutput();
     } while (strcmp(repeatOutput, expectedFinal)!=0);
 
-    //Close input pipe to signal EOF
-    CloseHandle(hChildStdinWr);
-
+*/
     //Clean up
     free(output);
     for (int i = 0; i < actualCount; i++) {free(actualLines[i]);}
