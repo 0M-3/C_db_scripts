@@ -167,6 +167,28 @@ BOOL TestInsertAndSelect() {
         }
     }
 
+    
+    char long_user[32]; 
+    char long_email[320];
+
+    for (int i=0; i<12; i++) {
+        long_user[i]='a';
+    }
+    long_user[12] = '\0';
+
+    for (int i=0; i<255; i++) {
+        long_email[i]='a';
+    }
+    long_email[255] = '\0';
+
+    char command2[400];
+    sprintf(command2, "insert 593829 %s %s", long_user, long_email);
+    printf("long user: %s", long_user);
+    printf("long email: %s", long_email);
+
+    if (!SendCommand(command2)){
+        fprintf(stderr, "Failed to send command: %s\n", command2);
+    }
 
     char repeatCommand[64];
         
@@ -174,9 +196,8 @@ BOOL TestInsertAndSelect() {
         sprintf(repeatCommand, "insert %d user%d person%d@example.com", j, j, j);
         if(!SendCommand(repeatCommand)) {
             fprintf(stderr, "Failed to send Command: %s\n", repeatCommand);
-            printf("Failed to send Command: %s\n", repeatCommand);
         }
-        printf("Sent command: %s\n", repeatCommand);
+        // printf("Sent command: %s\n", repeatCommand);
     }
 
     //Close input pipe to signal EOF
@@ -187,6 +208,10 @@ BOOL TestInsertAndSelect() {
     char* output = ReadAllOutput();
     char** actualLines;
     int actualCount = SplitOutputLines(output, &actualLines);
+    // printf("Total Output:\n" );
+    // for (int i; i<actualCount; i++) {
+    //     printf("%d  %s\n", i, actualLines[i]);
+    // }
 
     // Validate Output
     BOOL success = CompareOutput(
