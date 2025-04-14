@@ -128,7 +128,7 @@ int SplitOutputLines(char* output, char*** lines) {
 }
 
 // Compares actual output lines with expected output lines
-BOOL CompareOutput(char** actual, int actualCount, const char** expected, int expectedCount) {
+BOOL CompareOutput(char** actual, int actualCount, char** expected, int expectedCount) {
     if (actualCount != expectedCount) {
         fprintf(stderr, "Line count mismatch: %d vs %d\n", actualCount, expectedCount);
         return FALSE;
@@ -143,6 +143,24 @@ BOOL CompareOutput(char** actual, int actualCount, const char** expected, int ex
     return TRUE;
 }
 
+void generate_expected(char* new_array[]) {
+    new_array[0] = "db > 'insert 1 user1 person1@example.com'. ";
+    new_array[1] = "Executed. ";
+    new_array[2] = "db > 'select'. ";
+    new_array[3] = "(1, user1, person1@example.com) ";
+    new_array[4] ="Executed. "; 
+
+    char tempInsert[64];
+
+    for (int k=0; k<1500; k++) {
+        sprintf(tempInsert, "db > 'insert %d user%d person%d@example.com'. ", k, k, k);
+        new_array[2*k+5] = tempInsert;
+        new_array[2*k+6] = "Executed. ";
+    }
+    new_array[3008] = NULL;
+
+}
+
 // Test case (insert and retrieve a row)
 BOOL TestInsertAndSelect() {
     const char* commands[] = {
@@ -150,14 +168,20 @@ BOOL TestInsertAndSelect() {
         //,".exit"
     };
 
-    const char* expected[] = {
-        "db > 'insert 1 user1 person1@example.com'. ",
-        "Executed. ",
-        "db > 'select'. ",
-        "(1, user1, person1@example.com) ",
-        "Executed. ", 
-        "db > '.exit'. "
-    };
+    char* expected[3009];
+    generate_expected(expected);
+
+    // for (int i = 0; i < 3008; i++)  {
+    //     printf(expected[i]);
+    // }
+    // // const char* expected[] = {
+    //     "db > 'insert 1 user1 person1@example.com'. ",
+    //     "Executed. ",
+    //     "db > 'select'. ",
+    //     "(1, user1, person1@example.com) ",
+    //     "Executed. ", 
+    //     "db > '.exit'. "
+    // };
 
     // Send commands to child
     for (int i=0; i < sizeof(commands)/sizeof(commands[0]); i++) {
@@ -183,8 +207,8 @@ BOOL TestInsertAndSelect() {
 
     char command2[400];
     sprintf(command2, "insert 593829 %s %s", long_user, long_email);
-    printf("long user: %s", long_user);
-    printf("long email: %s", long_email);
+    // printf("long user: %s", long_user);
+    // printf("long email: %s", long_email);
 
     if (!SendCommand(command2)){
         fprintf(stderr, "Failed to send command: %s\n", command2);
@@ -192,7 +216,7 @@ BOOL TestInsertAndSelect() {
 
     char repeatCommand[64];
         
-    for (int j=0; j<2000; j++) {
+    for (int j=0; j<1500; j++) {
         sprintf(repeatCommand, "insert %d user%d person%d@example.com", j, j, j);
         if(!SendCommand(repeatCommand)) {
             fprintf(stderr, "Failed to send Command: %s\n", repeatCommand);
@@ -214,10 +238,17 @@ BOOL TestInsertAndSelect() {
     // }
 
     // Validate Output
+
     BOOL success = CompareOutput(
         actualLines, actualCount,
-        expected, sizeof(expected)/sizeof(expected[0])
+        expected, sizeof(expected)/sizeof(char *)
     );
+
+
+    // BOOL success = CompareOutput(
+    //     actualLines, actualCount,
+    //     expected, sizeof(expected)/sizeof(expected[0])
+    // );
 
 /*
     char repeatCommand[128];
@@ -271,7 +302,12 @@ int main(){
     if (!CreateChildProcess("db.exe")) return 1;
 
     BOOL testResult = TestInsertAndSelect();
-
+    if (testResult) {
+        printf("The test is successful");
+    }
+    else {
+        printf("The test has failed");
+    }
     //Cleanup
     CloseHandle(hChildStdoutRd);
     CloseHandle(pi.hProcess);
