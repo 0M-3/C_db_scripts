@@ -125,7 +125,13 @@ typedef enum {
     META_COMMAND_UNRECOGNISED_COMMAND
 } MetaCommandResult;
 
-typedef enum { PREPARE_SUCCESS, PREPARE_UNRECOGNISED_STATEMENT, PREPARE_SYNTAX_ERROR} PrepareResult;
+typedef enum { 
+        PREPARE_SUCCESS, 
+        PREPARE_NEGATIVE_ID,
+        PREPARE_STRING_TOO_LONG,
+        PREPARE_SYNTAX_ERROR, 
+        PREPARE_UNRECOGNISED_STATEMENT,
+} PrepareResult;
 
 typedef enum { STATEMENT_INSERT, STATEMENT_SELECT, STATEMENT_FAILED } StatementType;
 
@@ -134,8 +140,44 @@ typedef struct {
     Row row_to_insert; // only to be used by insert statement, may be temporary
 } Statement;
 
+PrepareResult prepare_insert(InputBuffer* input_buffer, Statement* statement) {
+    statement->type = STATEMENT_INSERT;
+
+    // char* keyword = strtok(input_buffer->buffer, " ");
+    char* id_string = strtok(NULL, " ");
+    char* username = strtok(NULL, " ");
+    char* email = strtok(NULL, " ");
+
+    if (id_string == NULL || username == NULL || email == NULL) {
+        return PREPARE_SYNTAX_ERROR;
+    }
+
+    int id = atoi(id_string);
+    if (id < 0) {
+        return PREPARE_NEGATIVE_ID;
+    }
+    if (strlen(username) > COLUMN_USERNAME_SIZE) {
+        return PREPARE_STRING_TOO_LONG;
+    }
+    if (strlen(email) > COLUMN_EMAIL_SIZE) {
+        return PREPARE_STRING_TOO_LONG;
+    }
+
+    statement->row_to_insert.id = id;
+    strcpy(statement->row_to_insert.username, username);
+    strcpy(statement->row_to_insert.email, email);
+
+    return PREPARE_SUCCESS;
+}
+
+
 PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement) {
     if (strncmp(input_buffer->buffer, "insert", 6)==0) {
+        return prepare_insert(input_buffer, statement);
+
+        // The comment below is the previous implementation of insert statement comprehension.
+
+        /*
         statement->type = STATEMENT_INSERT;
         // Insert function being scanned
         int args_assigned = sscanf(
@@ -145,6 +187,7 @@ PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement)
         return PREPARE_SYNTAX_ERROR;
         }
         return PREPARE_SUCCESS;
+        */
     }
     if (strcmp(input_buffer->buffer, "select")==0) {
         statement->type = STATEMENT_SELECT;
@@ -153,7 +196,6 @@ PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement)
 
     return PREPARE_UNRECOGNISED_STATEMENT;
 }
-
 MetaCommandResult do_meta_command (InputBuffer* input_buffer) {
     if (strcmp(input_buffer->buffer, ".exit") == 0) {
         exit(EXIT_SUCCESS);
@@ -267,12 +309,18 @@ int main(int argc, char* argv[]) {
             }
             Statement statement;
             switch (prepare_statement(input_buffer, &statement)) {
-                case(PREPARE_SUCCESS):
+                case (PREPARE_SUCCESS):
                     break;
-                case(PREPARE_SYNTAX_ERROR):
+                case (PREPARE_NEGATIVE_ID):
+                    printf("ID must be positive.\n");
+                    continue;
+                case (PREPARE_STRING_TOO_LONG):
+                    printf("String is too long.\n");
+                    continue;
+                case (PREPARE_SYNTAX_ERROR):
                     printf("Syntax error. Could not parse statement.\n");
                     continue;
-                case(PREPARE_UNRECOGNISED_STATEMENT):
+                case (PREPARE_UNRECOGNISED_STATEMENT):
                     printf("Unrecognised keyword at start of '%s'.\n", input_buffer->buffer);
                     continue;
             }
