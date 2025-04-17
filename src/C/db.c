@@ -1,5 +1,3 @@
-#define _POSIX_C_SOURCE 200809L
-
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -143,7 +141,7 @@ typedef struct {
 PrepareResult prepare_insert(InputBuffer* input_buffer, Statement* statement) {
     statement->type = STATEMENT_INSERT;
 
-    // char* keyword = strtok(input_buffer->buffer, " ");
+    strtok(input_buffer->buffer, " ");
     char* id_string = strtok(NULL, " ");
     char* username = strtok(NULL, " ");
     char* email = strtok(NULL, " ");
