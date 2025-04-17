@@ -127,9 +127,10 @@ typedef enum {
 
 typedef enum { 
         PREPARE_SUCCESS, 
-        PREPARE_UNRECOGNISED_STATEMENT, 
+        PREPARE_NEGATIVE_ID,
+        PREPARE_STRING_TOO_LONG,
         PREPARE_SYNTAX_ERROR, 
-        PREPARE_STRING_TOO_LONG
+        PREPARE_UNRECOGNISED_STATEMENT,
 } PrepareResult;
 
 typedef enum { STATEMENT_INSERT, STATEMENT_SELECT, STATEMENT_FAILED } StatementType;
@@ -142,7 +143,7 @@ typedef struct {
 PrepareResult prepare_insert(InputBuffer* input_buffer, Statement* statement) {
     statement->type = STATEMENT_INSERT;
 
-    char* keyword = strtok(input_buffer->buffer, " ");
+    // char* keyword = strtok(input_buffer->buffer, " ");
     char* id_string = strtok(NULL, " ");
     char* username = strtok(NULL, " ");
     char* email = strtok(NULL, " ");
@@ -151,7 +152,10 @@ PrepareResult prepare_insert(InputBuffer* input_buffer, Statement* statement) {
         return PREPARE_SYNTAX_ERROR;
     }
 
-    int id = atio(id_string);
+    int id = atoi(id_string);
+    if (id < 0) {
+        return PREPARE_NEGATIVE_ID;
+    }
     if (strlen(username) > COLUMN_USERNAME_SIZE) {
         return PREPARE_STRING_TOO_LONG;
     }
@@ -305,15 +309,18 @@ int main(int argc, char* argv[]) {
             }
             Statement statement;
             switch (prepare_statement(input_buffer, &statement)) {
-                case(PREPARE_SUCCESS):
+                case (PREPARE_SUCCESS):
                     break;
-                case(PREPARE_STRING_TOO_LONG):
+                case (PREPARE_NEGATIVE_ID):
+                    printf("ID must be positive.\n");
+                    continue;
+                case (PREPARE_STRING_TOO_LONG):
                     printf("String is too long.\n");
                     continue;
-                case(PREPARE_SYNTAX_ERROR):
+                case (PREPARE_SYNTAX_ERROR):
                     printf("Syntax error. Could not parse statement.\n");
                     continue;
-                case(PREPARE_UNRECOGNISED_STATEMENT):
+                case (PREPARE_UNRECOGNISED_STATEMENT):
                     printf("Unrecognised keyword at start of '%s'.\n", input_buffer->buffer);
                     continue;
             }
