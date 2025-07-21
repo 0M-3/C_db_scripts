@@ -52,3 +52,6 @@ Mkfile.old
 dkms.conf
 src/C/.vscode/c_cpp_properties.json
 .vscode/tasks.json
+
+#Database files
+*.db
