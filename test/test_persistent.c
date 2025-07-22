@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
+#include <io.h>
 
 #define BUFSIZE 262144
 
@@ -153,7 +154,7 @@ BOOL TestInsertAndSelect() {
     };
 
     char* expected[]={
-        "db > Executed.",
+        "db > Executed. ",
         "db > "
     };
 
@@ -200,8 +201,8 @@ BOOL TestInsertAndSelectPersist() {
     };
 
     char* expected[]={
-        "db > (1, user1, person1@example.com)",
-        "Executed.",
+        "db > (1, user1, person1@example.com) ",
+        "Executed. ",
         "db > "
     };
 
@@ -243,11 +244,18 @@ BOOL TestInsertAndSelectPersist() {
 int main(){
     // test_command_read();
     // return 0;
-    if (!CreateChildProcess("db.exe")) return 1;
+
+    if(remove("test.db")==0) {
+        printf("The file was deleted successfully.\n");
+    } else {
+        printf("The was not deleted.\n");
+    }
+
+    if (!CreateChildProcess("db.exe test.db")) return 1;
 
     BOOL testResult = TestInsertAndSelect();
     if (testResult) {
-        printf("The test is successful");
+        printf("The test of insertion is successful.\n");
     }
     else {
         printf("The test has failed");
@@ -258,9 +266,12 @@ int main(){
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
 
+
+    if (!CreateChildProcess("db.exe test.db")) return 1;
+    
     BOOL testResultPersist = TestInsertAndSelectPersist();
     if (testResultPersist) {
-        printf("The test is successful");
+        printf("The test of persistence is successful.\n");
     }
     else {
         printf("The test has failed");
