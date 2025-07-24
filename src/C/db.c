@@ -191,7 +191,7 @@ void leaf_node_insert(Cursor* cursor, uint32_t key, Row* value) {
 
     if (cursor->cell_num < num_cells) {
         // Make room  of new cell
-        for (uint32_t i = num_cells; i > cursor->cell_num; i++) {
+        for (uint32_t i = num_cells; i > cursor->cell_num; i--) {
             memcpy(leaf_node_cell(node, i), leaf_node_cell(node, i-1), LEAF_NODE_CELL_SIZE);
         }
     }
@@ -227,7 +227,7 @@ Cursor* table_end(Table* table) {
     cursor->table = table;
     cursor->page_num= table->root_page_num;
     void* root_node = get_page(table->pager, table->root_page_num);
-    uint32_t num_cells = *leaf_node_cell(root_node, table->root_page_num);
+    uint32_t num_cells = *leaf_node_num_cells(root_node);
     cursor->cell_num = num_cells;
     cursor->end_of_table = true;
 
@@ -463,7 +463,7 @@ MetaCommandResult do_meta_command (InputBuffer* input_buffer, Table* table) {
     if (strcmp(input_buffer->buffer, ".exit") == 0) {
         db_close(table);
         exit(EXIT_SUCCESS);
-    } else if (strcmp(input_buffer->buffer, ".btree")) {
+    } else if (strcmp(input_buffer->buffer, ".btree") == 0) {
         printf("Tree:\n");
         print_leaf_node(get_page(table->pager, 0));
         return META_COMMAND_SUCCESS;
@@ -486,18 +486,6 @@ InputBuffer* new_input_buffer() {
 
     return input_buffer;
 }
-/*
-void execute_statement(Statement* statement) {
-    switch (statement->type) {
-        case(STATEMENT_INSERT):
-            printf("Do an insert here. \n");
-            break;
-        case(STATEMENT_SELECT):
-            printf("Do a select here. \n");
-            break;
-    }
-}
-*/
 
 // Temporary Insert and  Select statements
 
@@ -507,7 +495,7 @@ void print_row(Row* row) {
 
 ExecuteResult execute_insert (Statement* statement, Table* table){
     void* node = get_page(table->pager, table->root_page_num);
-    if (*leaf_node_num_cells(node) >= LEAF_NODE_MAX_CELLS) {
+    if ((*leaf_node_num_cells(node) >= LEAF_NODE_MAX_CELLS)) {
         return EXECUTE_TABLE_FULL;
     }
 

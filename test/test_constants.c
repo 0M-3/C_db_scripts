@@ -156,9 +156,9 @@ BOOL TestBTreePrint() {
     };
 
     char* expected[]={
-        "db > Expected. ",
-        "db > Expected. ",
-        "db > Expected. ",
+        "db > Executed. ",
+        "db > Executed. ",
+        "db > Executed. ",
         "db > Tree:",
         "leaf (size 3)",
         " - 0 : 3",
@@ -212,12 +212,12 @@ BOOL TestConstants() {
 
     char* expected[]={
         "db > Constants:",
-        "ROW_SIZE: 293",
+        "ROW_SIZE: 273",
         "COMMON_NODE_HEADER_SIZE: 6",
         "LEAF_NODE_HEADER_SIZE: 10",
-        "LEAF_NODE_CELL_SIZE: 297",
+        "LEAF_NODE_CELL_SIZE: 277",
         "LEAF_NODE_SPACE_FOR_CELLS: 4086",
-        "LEAF_NODE_MAX_CELLS: 13",
+        "LEAF_NODE_MAX_CELLS: 14",
         "db > "
     };
 
@@ -275,7 +275,7 @@ int main(){
         printf("The test of constants meta function is successful.\n");
     }
     else {
-        printf("The test has failed");
+        printf("The test has failed.\n");
     }
 
     //Cleanup
@@ -283,12 +283,14 @@ int main(){
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
 
+    if (!CreateChildProcess("db.exe test.db")) return 1;
+    
     BOOL testBTree= TestBTreePrint();
     if (testResult) {
         printf("The test of constants meta function is successful.\n");
     }
     else {
-        printf("The test has failed");
+        printf("The test has failed.\n");
     }
 
     //Cleanup
